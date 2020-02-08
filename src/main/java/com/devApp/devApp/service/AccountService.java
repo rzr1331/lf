@@ -108,6 +108,7 @@ public class AccountService {
         }
         account.setToken(null);
         accountRepository.save(account);
+        logger.info("Logged out user : {}", account.getUserName());
         return true;
     }
 }
