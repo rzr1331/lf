@@ -29,19 +29,17 @@ public class UserDataController {
     private AccountService accountService;
 
     @RequestMapping(value = "/url/submit", method = POST, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity loginAccount(@RequestBody UrlDataRequestDto urlDataRequestDto,
+    public UrlDataResponseDto loginAccount(@RequestBody UrlDataRequestDto urlDataRequestDto,
         @RequestHeader("X-LF-TOKEN") String token) throws Exception {
         // TODO : Implement RequestContextInterceptor to update userContext;
         String accountId = accountService.getAccountIdByToken(token);
-        userDataService.submitUserUrlData(urlDataRequestDto, accountId);
-        return new ResponseEntity("Success", HttpStatus.OK);
+        return userDataService.submitUserUrlData(urlDataRequestDto, accountId);
     }
 
     @RequestMapping(value = "/url", method = GET)
-    public ResponseEntity getUserUrlData(@RequestHeader("X-LF-TOKEN") String token) throws Exception {
+    public UrlDataResponseDto getUserUrlData(@RequestHeader("X-LF-TOKEN") String token) throws Exception {
         // TODO : Implement RequestContextInterceptor to update userContext;
         String accountId = accountService.getAccountIdByToken(token);
-        UrlDataResponseDto urlDataResponseDto = userDataService.getUserUrlData(accountId);
-        return new ResponseEntity(urlDataResponseDto, HttpStatus.OK);
+        return userDataService.getUserUrlData(accountId);
     }
 }

@@ -21,22 +21,31 @@ public class UserDataService {
     private UniqueIdGenerator uniqueIdGenerator;
 
     @Transactional
-    public void submitUserUrlData(UrlDataRequestDto urlDataRequestDto, String accountId) throws Exception{
-
-        //TODO : implement requestInterceptor update user context => get loggedIn accountDto
-        String loggedInAccountId = accountId;
+    public UrlDataResponseDto submitUserUrlData(UrlDataRequestDto urlDataRequestDto, String accountId) throws Exception{
 
         if (ObjectUtils.isEmpty(urlDataRequestDto) || ObjectUtils.isEmpty(urlDataRequestDto.getUrl())) {
             throw new Exception("Please enter a proper url.");
         }
 
-        UserData userData = UserData.Builder.userData()
-            .withUserDataId(uniqueIdGenerator.getUniqueId())
-            .withAccountId(loggedInAccountId)
-            .withUrlData(urlDataRequestDto.getUrl())
-            .build();
+        UserData userData = userDataRepository.findByAccountId(accountId);
 
-        userDataRepository.save(userData);
+        if (ObjectUtils.isEmpty(userData)) {
+            userData = UserData.Builder.userData()
+                .withUserDataId(uniqueIdGenerator.getUniqueId())
+                .withAccountId(accountId)
+                .withUrlData(urlDataRequestDto.getUrl())
+                .build();
+        } else {
+            userData.setUrlData(urlDataRequestDto.getUrl());
+        }
+
+        UserData updatedUserData = userDataRepository.save(userData);
+
+        return UrlDataResponseDto.Builder.urlDataResponseDto()
+            .withUrl(updatedUserData.getUrlData())
+            .withAccountId(updatedUserData.getAccountId())
+            .withUserDataId(updatedUserData.getUserDataId())
+            .build();
     }
 
     public UrlDataResponseDto getUserUrlData(@NotNull String accountId) {
