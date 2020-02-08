@@ -23,7 +23,7 @@ public class Account {
     private String password;
 
     // temp-storing token in db, usually it is stored in redis like caches.
-    @Column(name = "token", nullable = false, unique = true)
+    @Column(name = "token", unique = true)
     private String token;
 
     public Account() {

@@ -5,12 +5,14 @@ import com.devApp.devApp.model.dto.LoginRequestDto;
 import com.devApp.devApp.model.dto.LoginResponseDto;
 import com.devApp.devApp.repository.AccountRepository;
 import com.devApp.devApp.util.UniqueIdGenerator;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import javax.naming.AuthenticationException;
 import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
 @Service
@@ -26,9 +28,9 @@ public class AccountService {
 
     public void createTempLogins() {
 
-        if (accountRepository.findByUserName("avichal") != null) {
-            return;
-        }
+        //if (accountRepository.findByUserName("avichal") != null) {
+        //    return;
+        //}
 
         Account avichal = Account.Builder.account()
             .withAccountId(uniqueIdGenerator.getUniqueId())
@@ -57,7 +59,7 @@ public class AccountService {
         accountRepository.save(prabhat);
     }
 
-    public LoginResponseDto loginUser(LoginRequestDto loginRequestDto) throws AuthenticationException{
+    public LoginResponseDto loginAccount(LoginRequestDto loginRequestDto) throws AuthenticationException{
         Account account = accountRepository.findByUserName(loginRequestDto.getUserName());
         if (ObjectUtils.isEmpty(account)) {
             logger.error("Invalid userName");
@@ -72,10 +74,13 @@ public class AccountService {
         }
 
         logger.info("Succesfully logged in user : {}", loginRequestDto.getUserName());
+
+        Account updatedAccount =  updateTokenForAccountId(account.getAccountId(), uniqueIdGenerator.getUniqueId());
+
         LoginResponseDto loginResponseDto = LoginResponseDto.Builder.loginResponseDto()
-            .withUserName(account.getUserName())
-            .withAccountId(account.getAccountId())
-            .withToken(account.getToken())
+            .withUserName(updatedAccount.getUserName())
+            .withAccountId(updatedAccount.getAccountId())
+            .withToken(updatedAccount.getToken())
             .build();
         return loginResponseDto;
     }
@@ -85,7 +90,24 @@ public class AccountService {
         if (ObjectUtils.isEmpty(accountId)) {
             throw new Exception("Failed to authenticate user.");
         }
-        return token;
+        return accountId;
     }
 
+    @Transactional
+    private Account updateTokenForAccountId(@NotNull String accountId, @NotNull String token) {
+        Account account = accountRepository.findByAccountId(accountId);
+        account.setToken(token);
+        return accountRepository.save(account);
+    }
+
+    @Transactional
+    public Boolean logOutAccount(String accountId) {
+        Account account = accountRepository.findByAccountId(accountId);
+        if (ObjectUtils.isEmpty(account)) {
+            return false;
+        }
+        account.setToken(null);
+        accountRepository.save(account);
+        return true;
+    }
 }
