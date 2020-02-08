@@ -5,6 +5,7 @@ import com.devApp.devApp.model.dto.UrlDataRequestDto;
 import com.devApp.devApp.model.dto.UrlDataResponseDto;
 import com.devApp.devApp.repository.UserDataRepository;
 import com.devApp.devApp.util.UniqueIdGenerator;
+import java.net.URL;
 import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,10 @@ public class UserDataService {
 
         if (ObjectUtils.isEmpty(urlDataRequestDto) || ObjectUtils.isEmpty(urlDataRequestDto.getUrl())) {
             throw new Exception("Please enter a proper url.");
+        }
+
+        if (!isValidUrl(urlDataRequestDto.getUrl())) {
+            throw new Exception("Invalid Url");
         }
 
         UserData userData = userDataRepository.findByAccountId(accountId);
@@ -58,5 +63,15 @@ public class UserDataService {
             .build();
 
         return urlDataResponseDto;
+    }
+
+    private Boolean isValidUrl(String url) {
+        try {
+            URL u = new URL(url);
+            u.toURI();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
