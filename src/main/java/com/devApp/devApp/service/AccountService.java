@@ -5,6 +5,7 @@ import com.devApp.devApp.model.dto.LoginRequestDto;
 import com.devApp.devApp.model.dto.LoginResponseDto;
 import com.devApp.devApp.repository.AccountRepository;
 import com.devApp.devApp.util.UniqueIdGenerator;
+import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,21 +59,32 @@ public class AccountService {
     public LoginResponseDto loginUser(LoginRequestDto loginRequestDto) throws Exception{
         Account account = accountRepository.findByUserName(loginRequestDto.getUserName());
         if (ObjectUtils.isEmpty(account)) {
+            logger.error("Invalid userName");
             throw new Exception("Invalid login credentials.");
         }
 
         // I know this is a very basic way to do this, hashing, oAuth2 many things can be implemented.
         // Will add more layers on topk of it once the complete project is completed.
         if (!account.getPassword().equals(loginRequestDto.getPassword())) {
+            logger.error("Invalid password for user : {}", loginRequestDto.getUserName());
             throw new Exception("Invalid login credentials.");
         }
 
+        logger.info("Succesfully logged in user : {}", loginRequestDto.getUserName());
         LoginResponseDto loginResponseDto = LoginResponseDto.Builder.loginResponseDto()
             .withUserName(account.getUserName())
             .withAccountId(account.getAccountId())
             .withToken(account.getToken())
             .build();
         return loginResponseDto;
+    }
+
+    public String getAccountIdByToken(@NotNull String token) throws Exception{
+        String accountId = accountRepository.getAccountIdByToken(token);
+        if (ObjectUtils.isEmpty(accountId)) {
+            throw new Exception("Failed to authenticate user.");
+        }
+        return token;
     }
 
 }
